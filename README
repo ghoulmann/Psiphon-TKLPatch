@@ -1,0 +1,11 @@
+The launchpad.net page for Psiphon 2.5 sums it up best:
+
+Psiphon is a user-friendly, simple to administer, web-based proxy application. It allows users in regions with unrestricted Internet access to provide access to denied content to their friends, family, and associates in regions with restricted access.
+
+Learn more here and find answers to important questions here.
+
+Say what? OK. You live under an oppressive regime that prevents your use of Facebook..for the important things you need to to with it. Your friend living under a very different kind of oppression that chooses to allow unfettered access to the Internet sets up a Psiphon server (it could be a machine or a virtual machine). Your friend invites you to use the Psiphon server so you are free to access the Internet according to your values, not the autocrat's. Instead of typing in http://www.facebook.com, now you simply type in http://yourfriendspsiphon.org/099/ and do all your browsing from Psiphon.
+
+A well as Psiphon 2.5, this patch includes ssh/sftp, web shell, and Webmin with modules for postfix, phpini, ssh, Apache, and MySQL. These services are grounded in the TurnKey Linux Core appliance - a version of Ubuntu Lucid release.
+
+To learn how to apply the patch, visit our TKLPatch Primer (http://9while9.com) or see the official TKLPatch Documentation (http://www.turnkeylinux.org/docs/tklpatch/apply).
