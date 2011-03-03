@@ -1,0 +1,8 @@
+#!/bin/bash -e
+#Create Psiphon Cert, ask for domain name or IP for cert
+
+. /etc/default/inithooks
+
+[ -e $INITHOOKS_CONF ] && . $INITHOOKS_CONF
+
+$INITHOOKS_PATH/bin/psiphon_cert.sh

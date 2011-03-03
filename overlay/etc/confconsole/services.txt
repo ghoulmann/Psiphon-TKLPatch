@@ -1,0 +1,5 @@
+Psiphon:    https://127.0.0.1/001
+Psiphon:    https://$ipaddr/001
+Web shell:  https://$ipaddr:12320
+Webmin:     https://$ipaddr:12321
+SSH/SFTP:   root@$ipaddr (port 22)

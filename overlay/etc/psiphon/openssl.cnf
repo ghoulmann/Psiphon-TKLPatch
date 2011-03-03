@@ -1,0 +1,7 @@
+[ req ]
+distinguished_name = req_distinguished_name
+
+[ req_distinguished_name ]
+commonName="Enter the domain name or IP address where you're hosting the Psiphon server"
+commonName_default="127.0.0.1"
+

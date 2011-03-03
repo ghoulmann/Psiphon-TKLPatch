@@ -1,0 +1,397 @@
+#!/bin/bash +ex
+
+#Based on the Psiphon install script by Psiphon inc.
+#Modified as tklpatch patch configuration by Rik Goldman
+
+# Set Hostname
+HOSTNAME=psiphon
+echo "$HOSTNAME" > /etc/hostname
+sed -i "s|127.0.1.1 \(.*\)|127.0.1.1 $HOSTNAME|" /etc/hosts
+
+#Working patch.
+#To Do: Work out sanitizing and logic in everyboot.d
+
+# install dependencies #########################################################
+
+
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get -y \
+    -o DPkg::Options::=--force-confdef \
+    -o DPkg::Options::=--force-confold \
+    install build-essential \
+    postfix \
+    webmin-postfix \
+    libpng12-dev \
+    libjpeg-dev \
+    openssl \
+    libssl-dev \
+    mysql-server \
+    mysql-client \
+    libxml2-dev \
+    libxslt1-dev \
+    libmysqlclient15-dev \
+    libgeoip1 \
+    webmin-apache \
+    webmin-phpini \
+    webmin-mysql \
+    dialog \
+    lynx \
+    python-ipaddr \
+    python-netifaces \
+    python-mysqldb
+
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+#Now starts with init.d/psiphon - rc.local now unnecessary
+#Set Psiphon to start from /etc/rc.local
+#if [! -e /etc/rc.local ]; then
+#    chmod +x /etc/rc.local
+#fi
+
+# Download Psiphon ##############################################################
+
+if [ ! -f /tmp/psiphon-2.5.tar.gz ] ; then
+    wget http://launchpad.net/psiphon/2.5/2.5/+download/psiphon-2.5.tar.gz -O /tmp/psiphon-2.5.tar.gz
+    if [ $? != 0 ]; then
+        exit 1
+    fi
+fi
+
+tar xvzf /tmp/psiphon-2.5.tar.gz -C /tmp
+
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+# set absolute path to destination folder ######################################
+
+dest=/opt/psiphon
+
+# create destination folder ####################################################
+
+if [ ! -d "$dest" ]; then
+    mkdir "$dest"
+    if [ $? != 0 ]; then
+        exit 1
+    fi
+fi
+
+
+
+# install apache ##############################################################
+
+if [ ! -f httpd-2.2.13.tar.gz ] ; then
+    wget http://archive.apache.org/dist/httpd/httpd-2.2.13.tar.gz -O /tmp/psiphon-2.5/httpd-2.2.13.tar.gz
+    if [ $? != 0 ]; then
+        exit 1
+    fi
+fi
+
+tar xvzf /tmp/psiphon-2.5/httpd-2.2.13.tar.gz -C /tmp/psiphon-2.5/
+
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+echo "configure"
+cd /tmp/psiphon-2.5/httpd-2.2.13/srclib/apr/
+pwd
+./configure --prefix="$dest/apache2"
+
+echo "make clean"
+make clean
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+echo "make"
+make
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+echo "make install"
+make install
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+# pwd: httpd-2.2.13/srclib/apr/
+
+cd /tmp/psiphon-2.5/httpd-2.2.13/srclib/apr-util/
+pwd
+echo "configure"
+./configure --prefix=${dest}/apache2 --with-apr=${dest}/apache2 --with-mysql=/usr
+
+echo "make clean"
+make clean
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+echo "make"
+make
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+echo "make install"
+make install
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+# pwd: httpd-2.2.13/srclib/apr-util/
+
+#cd ../../
+
+# pwd: httpd-2.2.13/
+
+cd /tmp/psiphon-2.5/httpd-2.2.13/
+pwd
+echo "configure"
+./configure --prefix=${dest}/apache2 \
+--enable-mods-shared=all \
+--enable-ssl \
+--enable-unique-id  \
+--enable-authz-host \
+--enable-auth-basic \
+--enable-include \
+--enable-log-config \
+--enable-env \
+--enable-mime-magic \
+--enable-expires \
+--enable-headers \
+--enable-setenvif \
+--enable-mime \
+--enable-status \
+--enable-autoindex \
+--enable-info \
+--enable-vhost-alias \
+--enable-dir \
+--enable-alias \
+--enable-dbd \
+--enable-filter \
+--libexecdir=${dest}/apache2/libexec/apache22 \
+--with-apr=${dest}/apache2 \
+--with-apr-util=${dest}/apache2
+
+#pwd
+
+echo "make clean"
+make clean
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+echo "make"
+make
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+echo "make install"
+make install
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+#cd ..
+
+# install php ##################################################################
+
+if [ ! -f /tmp/psiphon-2.5/php-5.2.9.tar.gz ] ; then
+    wget http://museum.php.net/php5/php-5.2.9.tar.gz -O /tmp/psiphon-2.5/php-5.2.9.tar.gz
+#The newer PHP release, downloaded with the following lines seems to work. Sticking with the version in 2.5 install script.
+#if [ ! -f /tmp/psiphon-2.5/php-5.2.17.tar.gz ]; then
+#    wget http://us2.php.net/get/php-5.2.17.tar.gz/from/us.php.net/mirror -O /tmp/psiphon-2.5/php-5.2.17.tar.gz
+    if [ $? != 0 ]; then
+        exit 1
+    fi
+fi
+
+tar xvzf /tmp/psiphon-2.5/php-5.2.9.tar.gz -C /tmp/psiphon-2.5/
+#tar xvzf /tmp/psiphon-2.5/php-5.2.17.tar.gz -C /tmp/psiphon-2.5/
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+cd /tmp/psiphon-2.5/php-5.2.9
+#cd /tmp/psiphon-2.5/php-5.2.17
+pwd
+
+echo "configure php"
+./configure \
+--with-apxs2=${dest}/apache2/bin/apxs \
+--with-mysql=/usr \
+--with-mysqli \
+--enable-pdo \
+--with-pdo-mysql=/usr \
+--prefix=${dest}/php \
+--with-config-file-path=${dest}/php \
+--with-jpeg-dir=/usr/include \
+--with-gd \
+--enable-mbstring \
+--enable-debug \
+--enable-maintainer-zts
+
+echo "Make clean PHP"
+
+make clean
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+pwd
+echo "make php"
+
+make
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+echo "make install php"
+make install
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+
+# preparing psiphon compile env ################################################
+
+# set psiphon specific PATH to apxs
+
+PATH=${dest}/apache2/bin:${PATH}
+
+
+# setting include path for psiphon modules
+
+if [ ! -d /usr/local/include/libxml2 ] ; then
+    mkdir /usr/local 2> /dev/null
+    mkdir /usr/local/include 2> /dev/null
+    ln -s  /usr/include/libxml2 /usr/local/include/libxml2
+fi
+
+if [ ! -d /usr/local/include/libxml2 ] ; then
+    mkdir /usr/local 2> /dev/null
+    mkdir /usr/local/include 2> /dev/null
+    ln -s /usr/include/libxslt /usr/local/include/libxslt
+fi
+
+
+# compile psiphon ##############################################################
+
+cd /tmp/psiphon-2.5/mod_psiphon
+pwd
+make
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+cd /tmp/psiphon-2.5
+
+
+# Create Directory for Cert ###################################################
+
+mkdir ${dest}/apache2/ssl
+
+if [ $? != 0 ]; then 
+    exit 1
+fi 
+
+
+# create apache user ###########################################################
+
+groupadd ppwww
+
+useradd -c "Apache Server" -d /nonexistent -g ppwww -s /bin/false ppwww
+
+# create symlinks to xml libs ##################################################
+
+ln -s /usr/lib/libxslt.so ${dest}/apache2/lib
+ln -s /usr/lib/libxml2.so ${dest}/apache2/lib
+ln -s /usr/lib/libexslt.so ${dest}/apache2/lib
+
+# get mysql:psiphon password ###################################################
+#Handled now through inithook
+#echo "Create mysql 'psiphon' user password,"
+#echo -n "Don't use either '/' or '\"' characters in the password:"
+
+#tty_mode=`stty -g`
+#stty -echo
+#read mysql_pass
+#stty ${tty_mode}
+#echo
+
+# httpd.conf ###################################################################
+
+cat /tmp/psiphon-2.5/mod_psiphon/httpd_conf/httpd.conf | \
+sed "s%#ServerRoot#%ServerRoot \"${dest}/apache2\"%" \
+> ${dest}/apache2/conf/httpd.conf
+
+
+# setup www ####################################################################
+
+if [ -d ${dest}/apache2/www ]; then
+	rm -r ${dest}/apache2/www
+fi
+
+mkdir ${dest}/apache2/www
+cp -R /tmp/psiphon-2.5/www/* ${dest}/apache2/www
+chown -Rh ppwww:ppwww ${dest}/apache2
+
+# update config files with mysql:psiphon password ##############################
+#Handled now with inithook
+#cat /tmp/psiphon-2.5/www/config.php | sed "s/#psiphon_mysql_password#/${mysql_pass}/" > ${dest}/apache2/www/config.php
+#cat /tmp/psiphon-2.5/sql/grant.sql | sed "s/#psiphon_mysql_password#/${mysql_pass}/" > sql/grant.new.sql
+
+#The following lines describe in order what the cat statement below does.
+# init database ################################################################
+# create database
+# create psiphon user
+# create database
+# init proxy, user tables
+# load jsf table content
+# Add new youtube rules
+
+#echo "Creating 'psiphon' database and 'psiphon' default user"
+#echo "Enter current password for mysql root (enter for none)"
+
+cd /tmp/psiphon-2.5
+cat sql/create_db.sql sql/structure.2.3.sql sql/init.sql \
+sql/upgrade-2.4.sql sql/upgrade-2.5.sql sql/jsf.sql sql/youtube.sql | mysql -u root
+
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+#rm sql/grant.new.sql
+
+# create psiphon cron user #####################################################
+
+mkdir ${dest}/ppcron /var/run/ppcron
+chmod 700 ${dest}/ppcron /var/run/ppcron
+
+useradd -c "Psiphon cron user" -d ${dest}/ppcron -g ppwww -s /bin/false ppcron
+
+ln -s ${dest}/apache2/www/config.php ${dest}/ppcron
+ln -s ${dest}/apache2/www/includes ${dest}/ppcron
+
+cp cronjobs/*php ${dest}/ppcron
+
+chown -Rh ppcron:ppwww ${dest}/ppcron /var/run/ppcron
+
+# cronjobs #####################################################################
+
+
+cat /tmp/psiphon-2.5/cronjobs/crontab | sed "s%#dest#%${dest}%g"| crontab -u ppcron -
+
+#Setup Initscript Psiphon ######################################################
+update-rc.d psiphon defaults
+
+# (re)start apache #############################################################
+#Shutdown mysqld
+/etc/init.d/mysql stop
+/etc/init.d/psiphon stop

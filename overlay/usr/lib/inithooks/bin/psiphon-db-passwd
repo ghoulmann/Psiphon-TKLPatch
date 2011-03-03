@@ -1,0 +1,20 @@
+#!/bin/bash -e
+
+#Create a password dialog box; store the output in /tmp/mysql_pass
+dialog --title "Set Psiphon Database Password" \
+    --passwordbox Password 10 40 \
+    2> /tmp/psiphon
+
+if [ $? = 0 ]; then
+    PSIPHON_PASS=`cat /tmp/psiphon`
+    sed -i "s|#psiphon_mysql_password#|$PSIPHON_PASS|" \
+/opt/psiphon/apache2/conf/httpd.conf
+    cat /opt/psiphon/sql/grant.sql|sed "s|#psiphon_mysql_password#|$PSIPHON_PASS|" > \
+/opt/psiphon/sql/grant.new.sql
+    sed -i "s|#psiphon_mysql_password#|$PSIPHON_PASS|" /opt/psiphon/apache2/www/config.php
+    mysql -u root < /opt/psiphon/sql/grant.new.sql
+    rm /tmp/psiphon
+    rm /opt/psiphon/sql/grant.new/sql
+else
+    echo "Psiphon database password not set. The must be done manually."
+fi
