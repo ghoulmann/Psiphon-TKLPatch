@@ -43,7 +43,6 @@ for ip in hostnames:
 for ip in hostnames:
     if not ip.startswith("192.168") or ip.startswith("10.") or ip.startswith("172."):
         hostnames.remove(ip)
-
 #print hostnames
 #print "remaining hostnames"
 #print hostnames

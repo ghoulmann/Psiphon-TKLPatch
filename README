@@ -9,3 +9,5 @@ Say what? OK. You live under an oppressive regime that prevents your use of Face
 A well as Psiphon 2.5, this patch includes ssh/sftp, web shell, and Webmin with modules for postfix, phpini, ssh, Apache, and MySQL. These services are grounded in the TurnKey Linux Core appliance - a version of Ubuntu Lucid release.
 
 To learn how to apply the patch, visit our TKLPatch Primer (http://9while9.com) or see the official TKLPatch Documentation (http://www.turnkeylinux.org/docs/tklpatch/apply).
+
+There is perhaps a logic problem (Python) in line 44 of overlay/usr/lib/inithooks/bin/proxyconfig.py.
